@@ -4,11 +4,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "Schedules")
-class Schedule(
-    @PrimaryKey
-    val id: Int,
+data class Schedule(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     var description: String,
-    var timeInMillis: Long = 0L,
+    var timeInMillis: Long,
     var dayOfMonth: Int,
     var month: Int,
     var year: Int

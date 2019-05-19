@@ -9,14 +9,22 @@
         android:id="@+id/scheduleFragment"
         android:name="io.julius.schedule.ScheduleFragment"
         android:label="fragment_schedule"
-        tools:layout="@layout/fragment_schedule" >
+        tools:layout="@layout/fragment_schedule">
         <action
-            android:id="@+id/action_scheduleFragment_to_addEditScheduleFragment"
+            android:id="@+id/action_schedule_to_addEditSchedule"
             app:destination="@id/addEditScheduleFragment" />
     </fragment>
     <fragment
         android:id="@+id/addEditScheduleFragment"
         android:name="io.julius.schedule.AddEditScheduleFragment"
         android:label="fragment_add_edit_schedule"
-        tools:layout="@layout/fragment_add_edit_schedule" />
+        tools:layout="@layout/fragment_add_edit_schedule">
+        <argument
+            android:name="dateInMillis"
+            app:argType="long" />
+        <argument
+            android:name="scheduleDescription"
+            android:defaultValue=" "
+            app:argType="string" />
+    </fragment>
 </navigation>

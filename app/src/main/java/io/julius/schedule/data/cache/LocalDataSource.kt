@@ -3,8 +3,7 @@ package io.julius.schedule.data.cache
 import androidx.lifecycle.LiveData
 import io.julius.schedule.data.DataSource
 import io.julius.schedule.data.model.Schedule
-import io.reactivex.BackpressureStrategy
-import io.reactivex.Flowable
+
 
 class LocalDataSource(private val appDAO: AppDAO) : DataSource {
 

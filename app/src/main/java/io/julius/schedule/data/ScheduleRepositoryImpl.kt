@@ -19,7 +19,7 @@ class ScheduleRepositoryImpl(private val localDataSource: LocalDataSource) : Sch
     }
 
     override suspend fun saveSchedule(schedule: Schedule): Boolean {
-        return saveSchedule(schedule)
+        return localDataSource.saveSchedule(schedule)
     }
 
     override suspend fun deleteSchedule(schedule: Schedule) {

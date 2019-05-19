@@ -5,9 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.appbar.AppBarLayout
+import io.julius.schedule.viewmodel.ScheduleViewModel
 import kotlinx.android.synthetic.main.fragment_schedule.*
 import java.text.DateFormatSymbols
 import java.util.*
@@ -15,11 +19,23 @@ import java.util.*
 
 class ScheduleFragment : Fragment() {
 
+    private var currentCalendar: Calendar = Calendar.getInstance()
+
     var appBarTitle = setupToolbarTitle(
-        Calendar.getInstance().get(Calendar.DAY_OF_MONTH),
-        Calendar.getInstance().get(Calendar.MONTH),
-        Calendar.getInstance().get(Calendar.YEAR)
+        currentCalendar.get(Calendar.DAY_OF_MONTH),
+        currentCalendar.get(Calendar.MONTH),
+        currentCalendar.get(Calendar.YEAR)
     )
+
+    lateinit var scheduleViewModel: ScheduleViewModel
+
+    private val schedulesAdapter = SchedulesAdapter()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        scheduleViewModel = ViewModelProviders.of(activity!!).get(ScheduleViewModel::class.java)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -32,14 +48,22 @@ class ScheduleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Subscribe to data from viewmodel
+        scheduleViewModel.schedules.observe(this, Observer {
+            schedulesAdapter.updateSchedules(it)
+        })
+
+        // Click listener for the floating action button
         fab.setOnClickListener {
-            Navigation.findNavController(activity!!, R.id.navigation_host_fragment)
-                .navigate(R.id.action_scheduleFragment_to_addEditScheduleFragment)
+            // Put selected date time in millis in bundle for addEditFragment
+            val bundle = bundleOf(DATE_IN_MILLIS to currentCalendar.timeInMillis)
+
+            // Navigate to detail view
+            findNavController(this).navigate(R.id.action_schedule_to_addEditSchedule, bundle)
         }
 
-        toolbar.setOnTouchListener { v, event ->
-            true
-        }
+        // Set recycler view adapter to order adapter
+        recycler_view.adapter = schedulesAdapter
 
         appBarLayout.addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
             var isShow = true
@@ -60,22 +84,21 @@ class ScheduleFragment : Fragment() {
             }
         })
 
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = calendarView.date
-
-        setupToolbarTitle(
-            calendar.get(Calendar.DAY_OF_MONTH),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.YEAR)
+        scheduleViewModel.getSchedulesForDate(
+            currentCalendar.get(Calendar.DAY_OF_MONTH),
+            currentCalendar.get(Calendar.MONTH),
+            currentCalendar.get(Calendar.YEAR)
         )
 
-        calendarView.setOnDateChangeListener { viewCalendar, year, month, dayOfMonth ->
-            if (isDateInThePast(dayOfMonth, month, year)) {
+        calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            if (isDateInThePast(currentDate(dayOfMonth, month, year))) {
                 fab.hide()
             } else {
                 fab.show()
             }
             setupToolbarTitle(dayOfMonth, month, year)
+
+            scheduleViewModel.getSchedulesForDate(dayOfMonth, month, year)
         }
     }
 
@@ -90,11 +113,19 @@ class ScheduleFragment : Fragment() {
         return appBarTitle
     }
 
-    private fun isDateInThePast(dayOfMonth: Int, month: Int, year: Int): Boolean {
+    private fun currentDate(dayOfMonth: Int, month: Int, year: Int): Calendar {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
         calendar.set(Calendar.MONTH, month)
         calendar.set(Calendar.YEAR, year)
+
+        // Update current calendar variable
+        currentCalendar = calendar
+
+        return calendar
+    }
+
+    private fun isDateInThePast(calendar: Calendar): Boolean {
 
         val reference = Calendar.getInstance()
 
@@ -108,5 +139,9 @@ class ScheduleFragment : Fragment() {
         }
 
         return calendar.timeInMillis < reference.timeInMillis
+    }
+
+    companion object {
+        const val DATE_IN_MILLIS = "dateInMillis"
     }
 }
