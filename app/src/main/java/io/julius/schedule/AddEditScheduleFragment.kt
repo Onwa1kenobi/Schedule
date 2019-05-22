@@ -3,6 +3,7 @@ package io.julius.schedule
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -109,21 +110,26 @@ class AddEditScheduleFragment : Fragment() {
                     minute = time_picker.currentMinute
                 }
 
+                Log.e("SCHEDULE", "HOUR : $hour     MINUTE : $minute")
+
                 when {
                     hour == 0 -> {
-                        hour += 12
+                        hour = 12
                         period = Calendar.AM
                     }
-
-                    hour == 12 -> period = Calendar.PM
 
                     hour > 12 -> {
                         hour -= 12
                         period = Calendar.PM
                     }
+
+                    else -> {
+                        hour = 12
+                        period = Calendar.PM
+                    }
                 }
 
-                calendar.set(Calendar.HOUR, hour)
+                calendar.set(Calendar.HOUR_OF_DAY, hour)
                 calendar.set(Calendar.MINUTE, minute)
                 calendar.set(Calendar.AM_PM, period)
 

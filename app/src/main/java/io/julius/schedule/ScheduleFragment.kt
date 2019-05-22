@@ -47,6 +47,15 @@ class ScheduleFragment : Fragment() {
                         findNavController(this).navigate(R.id.action_schedule_to_addEditSchedule, bundle)
                     }
 
+                    is ScheduleViewContract.NoSchedules -> {
+                        // Show or hide the empty list view
+                        if (info.isEmpty) {
+                            label_no_schedule.visibility = View.VISIBLE
+                        } else {
+                            label_no_schedule.visibility = View.GONE
+                        }
+                    }
+
                     else -> {
                         // Do nothing
                     }

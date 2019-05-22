@@ -37,11 +37,19 @@ class ScheduleViewModel(private val repository: ScheduleRepository, context: Con
             // Subscribe to repository fetched schedules
             schedules.addSource(job.await()) {
                 schedules.postValue(it)
+
+                if (it.isEmpty()) {
+                    scheduleViewContract.postValue(Event(ScheduleViewContract.NoSchedules(true)))
+                } else {
+                    scheduleViewContract.postValue(Event(ScheduleViewContract.NoSchedules(false)))
+                }
             }
         }
     }
 
     fun saveSchedule(description: String, calendar: Calendar) {
+        calendar.set(Calendar.SECOND, 0)
+
         val schedule = Schedule(
             description = description,
             timeInMillis = calendar.timeInMillis,
@@ -68,6 +76,8 @@ class ScheduleViewModel(private val repository: ScheduleRepository, context: Con
     }
 
     fun updateSchedule(schedule: Schedule, description: String, calendar: Calendar) {
+        calendar.set(Calendar.SECOND, 0)
+
         schedule.apply {
             this.description = description
             timeInMillis = calendar.timeInMillis
