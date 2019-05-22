@@ -16,9 +16,14 @@ interface ScheduleRepository {
     suspend fun getDateSchedules(dayOfMonth: Int, month: Int, year: Int): LiveData<List<Schedule>>
 
     /**
+     * Gets the schedule with the id passed from the local database and the remote database
+     */
+    suspend fun getSchedule(id: Int): LiveData<Schedule>
+
+    /**
      * Saves a schedule to the local database
      */
-    suspend fun saveSchedule(schedule: Schedule): Boolean
+    suspend fun saveSchedule(schedule: Schedule): Long
 
     /**
      * Deletes a schedule from the local database

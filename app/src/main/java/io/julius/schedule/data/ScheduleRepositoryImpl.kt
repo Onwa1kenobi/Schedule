@@ -18,7 +18,11 @@ class ScheduleRepositoryImpl(private val localDataSource: LocalDataSource) : Sch
         return localDataSource.getDateSchedules(dayOfMonth, month, year)
     }
 
-    override suspend fun saveSchedule(schedule: Schedule): Boolean {
+    override suspend fun getSchedule(id: Int): LiveData<Schedule> {
+        return localDataSource.getSchedule(id)
+    }
+
+    override suspend fun saveSchedule(schedule: Schedule): Long {
         return localDataSource.saveSchedule(schedule)
     }
 

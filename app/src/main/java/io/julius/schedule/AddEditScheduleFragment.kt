@@ -82,6 +82,10 @@ class AddEditScheduleFragment : Fragment() {
             }
         }
 
+        toolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
+        }
+
         button_done.setOnClickListener {
             layout_description_field_wrapper.isErrorEnabled = false
 
@@ -138,7 +142,7 @@ class AddEditScheduleFragment : Fragment() {
                     scheduleViewModel.saveSchedule(field_schedule_description.text.toString().trim(), calendar)
                 } else {
                     // Existing schedule, call viewmodel to edit
-                    scheduleViewModel.editSchedule(
+                    scheduleViewModel.updateSchedule(
                         schedule,
                         field_schedule_description.text.toString().trim(),
                         calendar

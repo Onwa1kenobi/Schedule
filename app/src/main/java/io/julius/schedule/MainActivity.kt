@@ -18,7 +18,8 @@ class MainActivity : AppCompatActivity() {
         // Create view model with activity scope so that hosted fragment will have access to the same instance
         ViewModelProviders.of(
             this, ViewModelFactory(
-                ScheduleRepositoryImpl(LocalDataSource(AppDatabase.getInstance(applicationContext).appDao()))
+                ScheduleRepositoryImpl(LocalDataSource(AppDatabase.getInstance(applicationContext).appDao())),
+                applicationContext
             )
         ).get(ScheduleViewModel::class.java)
     }

@@ -15,9 +15,12 @@ class LocalDataSource(private val appDAO: AppDAO) : DataSource {
         return appDAO.getDateSchedules(dayOfMonth, month, year)
     }
 
-    override suspend fun saveSchedule(schedule: Schedule): Boolean {
-        val rowId: Long? = appDAO.saveSchedule(schedule)
-        return rowId != null
+    override suspend fun getSchedule(id: Int): LiveData<Schedule> {
+        return appDAO.getSchedule(id)
+    }
+
+    override suspend fun saveSchedule(schedule: Schedule): Long {
+        return appDAO.saveSchedule(schedule)
     }
 
     override suspend fun deleteSchedule(schedule: Schedule) {

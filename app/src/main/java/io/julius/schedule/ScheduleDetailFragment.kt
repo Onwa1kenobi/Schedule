@@ -36,6 +36,12 @@ class ScheduleDetailFragment : RoundedBottomSheetDialogFragment() {
 
         label_time.text = DateUtils.getRelativeTimeSpanString(calendar.timeInMillis, now, DateUtils.DAY_IN_MILLIS)
 
+        if (calendar.timeInMillis < now) {
+            button_edit.visibility = View.GONE
+        } else {
+            button_edit.visibility = View.VISIBLE
+        }
+
 //        if (calendar.timeInMillis < now) {
 //            layout_container.setBackgroundColor(ContextCompat.getColor(context!!, R.color.gray))
 //            if (Build.VERSION.SDK_INT >= 21) {

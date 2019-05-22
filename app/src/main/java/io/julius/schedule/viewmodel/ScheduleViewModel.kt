@@ -1,8 +1,10 @@
 package io.julius.schedule.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import io.julius.schedule.AlarmManager
 import io.julius.schedule.ScheduleViewContract
 import io.julius.schedule.data.ScheduleRepository
 import io.julius.schedule.data.model.Schedule
@@ -13,7 +15,9 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
-class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(), CoroutineScope {
+class ScheduleViewModel(private val repository: ScheduleRepository, context: Context) : ViewModel(), CoroutineScope {
+
+    val alarmManager = AlarmManager(context)
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO
 
@@ -47,8 +51,13 @@ class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(
         )
 
         launch {
-            val saved = repository.saveSchedule(schedule)
-            if (saved) {
+            val id = repository.saveSchedule(schedule)
+
+            if (id != 0L) {
+                schedule.apply {
+                    this.id = id.toInt()
+                }
+                alarmManager.registerAlarm(schedule)
                 // Successfully saved. return to schedules
                 scheduleViewContract.postValue(Event(ScheduleViewContract.SaveSuccess))
             } else {
@@ -58,7 +67,7 @@ class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(
         }
     }
 
-    fun editSchedule(schedule: Schedule, description: String, calendar: Calendar) {
+    fun updateSchedule(schedule: Schedule, description: String, calendar: Calendar) {
         schedule.apply {
             this.description = description
             timeInMillis = calendar.timeInMillis
@@ -68,8 +77,10 @@ class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(
         }
 
         launch {
-            val saved = repository.saveSchedule(schedule)
-            if (saved) {
+            val id = repository.saveSchedule(schedule)
+
+            if (id != 0L) {
+                alarmManager.registerAlarm(schedule)
                 // Successfully saved. return to schedules
                 scheduleViewContract.postValue(Event(ScheduleViewContract.SaveSuccess))
             } else {
@@ -87,6 +98,7 @@ class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(
     fun deleteSchedule(schedule: Schedule) {
         launch {
             repository.deleteSchedule(schedule)
+            alarmManager.cancelAlarm(schedule)
         }
     }
 }
