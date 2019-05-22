@@ -12,6 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import io.julius.schedule.data.model.Schedule
 import io.julius.schedule.viewmodel.ScheduleViewModel
 import kotlinx.android.synthetic.main.fragment_add_edit_schedule.*
 import java.util.*
@@ -37,6 +38,10 @@ class AddEditScheduleFragment : Fragment() {
                         // Close fragment
                         findNavController().popBackStack()
                     }
+
+                    else -> {
+                        // Do nothing
+                    }
                 }
             }
         })
@@ -54,9 +59,28 @@ class AddEditScheduleFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val safeArgs: AddEditScheduleFragmentArgs by navArgs()
-        val currentDateInMillis = safeArgs.dateInMillis
 
-        field_schedule_description.setText(safeArgs.scheduleDescription)
+        val schedule: Schedule? = safeArgs.schedule
+
+        val currentDateInMillis: Long
+
+        if (schedule == null) {
+            currentDateInMillis = safeArgs.dateInMillis
+            field_schedule_description.setText(safeArgs.scheduleDescription)
+        } else {
+            currentDateInMillis = schedule.timeInMillis
+            field_schedule_description.setText(schedule.description)
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = schedule.timeInMillis
+
+            if (Build.VERSION.SDK_INT >= 23) {
+                time_picker.hour = calendar.get(Calendar.HOUR)
+                time_picker.minute = calendar.get(Calendar.MINUTE)
+            } else {
+                time_picker.currentHour = calendar.get(Calendar.HOUR)
+                time_picker.currentMinute = calendar.get(Calendar.MINUTE)
+            }
+        }
 
         button_done.setOnClickListener {
             layout_description_field_wrapper.isErrorEnabled = false
@@ -68,7 +92,7 @@ class AddEditScheduleFragment : Fragment() {
                 calendar.timeInMillis = currentDateInMillis
 
                 var hour: Int
-                var minute: Int
+                val minute: Int
 
                 // Variable to specify period of day.
                 var period = Calendar.AM
@@ -99,7 +123,27 @@ class AddEditScheduleFragment : Fragment() {
                 calendar.set(Calendar.MINUTE, minute)
                 calendar.set(Calendar.AM_PM, period)
 
-                scheduleViewModel.saveSchedule(field_schedule_description.text.toString().trim(), calendar)
+                if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) {
+                    // Time is in the past, show message
+                    Toast.makeText(
+                        context!!,
+                        "You don't happen to have a time machine laying around do you?",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+
+                if (schedule == null) {
+                    // New schedule, call viewmodel to add
+                    scheduleViewModel.saveSchedule(field_schedule_description.text.toString().trim(), calendar)
+                } else {
+                    // Existing schedule, call viewmodel to edit
+                    scheduleViewModel.editSchedule(
+                        schedule,
+                        field_schedule_description.text.toString().trim(),
+                        calendar
+                    )
+                }
             }
         }
     }

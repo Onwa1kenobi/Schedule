@@ -35,6 +35,24 @@ class ScheduleFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         scheduleViewModel = ViewModelProviders.of(activity!!).get(ScheduleViewModel::class.java)
+
+        scheduleViewModel.scheduleViewContract.observe(this, Observer {
+            it.getContentIfNotHandled()?.let { info ->
+                when (info) {
+                    is ScheduleViewContract.NavigateToEditSchedule -> {
+                        // Put selected schedule to be edited in bundle for addEditFragment
+                        val bundle = bundleOf(SCHEDULE to info.schedule, DATE_IN_MILLIS to info.schedule.timeInMillis)
+
+                        // Navigate to add/edit view
+                        findNavController(this).navigate(R.id.action_schedule_to_addEditSchedule, bundle)
+                    }
+
+                    else -> {
+                        // Do nothing
+                    }
+                }
+            }
+        })
     }
 
     override fun onCreateView(
@@ -53,12 +71,21 @@ class ScheduleFragment : Fragment() {
             schedulesAdapter.updateSchedules(it)
         })
 
+        // Prepare the schedules adapter for item click listening
+        schedulesAdapter.listener = { schedule ->
+            // Put schedule in bundle for detail view
+            val bundle = bundleOf(SCHEDULE to schedule)
+            // Navigate to detail view
+            ScheduleDetailFragment.newInstance(schedule).show(fragmentManager!!, "")
+//            findNavController().navigate(R.id.action_schedule_to_scheduleDetail, bundle, null, null)
+        }
+
         // Click listener for the floating action button
         fab.setOnClickListener {
             // Put selected date time in millis in bundle for addEditFragment
             val bundle = bundleOf(DATE_IN_MILLIS to currentCalendar.timeInMillis)
 
-            // Navigate to detail view
+            // Navigate to add/edit view
             findNavController(this).navigate(R.id.action_schedule_to_addEditSchedule, bundle)
         }
 
@@ -143,5 +170,6 @@ class ScheduleFragment : Fragment() {
 
     companion object {
         const val DATE_IN_MILLIS = "dateInMillis"
+        const val SCHEDULE = "schedule"
     }
 }

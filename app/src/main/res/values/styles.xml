@@ -18,4 +18,17 @@
         <item name="android:textColor">@android:color/white</item>
     </style>
 
+    <!-- set the rounded drawable as background to the bottom sheet -->
+    <style name="BottomSheet" parent="@style/Widget.Design.BottomSheet.Modal">
+        <!--<item name="android:background">@drawable/background_bottom_sheet_fragment</item>-->
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="BaseBottomSheetDialog" parent="@style/Theme.MaterialComponents.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="bottomSheetStyle">@style/BottomSheet</item>
+    </style>
+
+    <style name="BottomSheetDialogTheme" parent="BaseBottomSheetDialog" />
+
 </resources>

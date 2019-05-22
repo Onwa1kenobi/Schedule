@@ -57,4 +57,36 @@ class ScheduleViewModel(private val repository: ScheduleRepository) : ViewModel(
             }
         }
     }
+
+    fun editSchedule(schedule: Schedule, description: String, calendar: Calendar) {
+        schedule.apply {
+            this.description = description
+            timeInMillis = calendar.timeInMillis
+            dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
+            month = calendar.get(Calendar.MONTH)
+            year = calendar.get(Calendar.YEAR)
+        }
+
+        launch {
+            val saved = repository.saveSchedule(schedule)
+            if (saved) {
+                // Successfully saved. return to schedules
+                scheduleViewContract.postValue(Event(ScheduleViewContract.SaveSuccess))
+            } else {
+                // Saved failed, show message
+                scheduleViewContract.postValue(Event(ScheduleViewContract.MessageDisplay("Failed to save schedule")))
+            }
+        }
+    }
+
+    fun editSchedule(schedule: Schedule) {
+        // Navigate to edit fragment
+        scheduleViewContract.postValue(Event(ScheduleViewContract.NavigateToEditSchedule(schedule)))
+    }
+
+    fun deleteSchedule(schedule: Schedule) {
+        launch {
+            repository.deleteSchedule(schedule)
+        }
+    }
 }

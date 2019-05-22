@@ -14,6 +14,8 @@ class SchedulesAdapter : RecyclerView.Adapter<SchedulesAdapter.ViewHolder>() {
 
     private var schedules: List<Schedule> = ArrayList()
 
+    var listener: (Schedule) -> Unit = { }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
             LayoutInflater.from(parent.context).inflate(
@@ -44,6 +46,8 @@ class SchedulesAdapter : RecyclerView.Adapter<SchedulesAdapter.ViewHolder>() {
 
             if (schedule.timeInMillis < calendar.timeInMillis) {
                 itemView.card.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.gray))
+            } else {
+                itemView.card.setCardBackgroundColor(ContextCompat.getColor(itemView.context, R.color.colorPrimary))
             }
 
             calendar.timeInMillis = schedule.timeInMillis
@@ -57,6 +61,10 @@ class SchedulesAdapter : RecyclerView.Adapter<SchedulesAdapter.ViewHolder>() {
             }
 
             itemView.label_action.text = schedule.description
+
+            itemView.setOnClickListener {
+                listener(schedule)
+            }
         }
     }
 }

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_schedule_to_addEditSchedule"
             app:destination="@id/addEditScheduleFragment" />
+        <action
+            android:id="@+id/action_schedule_to_scheduleDetail"
+            app:destination="@id/scheduleDetailFragment" />
     </fragment>
     <fragment
         android:id="@+id/addEditScheduleFragment"
@@ -26,5 +29,18 @@
             android:name="scheduleDescription"
             android:defaultValue=" "
             app:argType="string" />
+        <argument
+            android:name="schedule"
+            android:defaultValue="@null"
+            app:argType="io.julius.schedule.data.model.Schedule"
+            app:nullable="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/scheduleDetailFragment"
+        android:name="io.julius.schedule.ScheduleDetailFragment"
+        android:label="ScheduleDetailFragment">
+        <argument
+            android:name="schedule"
+            app:argType="io.julius.schedule.data.model.Schedule" />
     </fragment>
 </navigation>
