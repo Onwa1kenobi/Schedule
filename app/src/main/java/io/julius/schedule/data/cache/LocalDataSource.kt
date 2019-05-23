@@ -11,11 +11,15 @@ class LocalDataSource(private val appDAO: AppDAO) : DataSource {
         return appDAO.getSchedules()
     }
 
+    override suspend fun getActiveSchedules(currentTimeInMillis: Long): List<Schedule> {
+        return appDAO.getActiveSchedules(currentTimeInMillis)
+    }
+
     override suspend fun getDateSchedules(dayOfMonth: Int, month: Int, year: Int): LiveData<List<Schedule>> {
         return appDAO.getDateSchedules(dayOfMonth, month, year)
     }
 
-    override suspend fun getSchedule(id: Int): LiveData<Schedule> {
+    override suspend fun getSchedule(id: Int): Schedule {
         return appDAO.getSchedule(id)
     }
 

@@ -123,13 +123,17 @@ class AddEditScheduleFragment : Fragment() {
                         period = Calendar.PM
                     }
 
+                    hour < 12 -> {
+                        period = Calendar.AM
+                    }
+
                     else -> {
                         hour = 12
                         period = Calendar.PM
                     }
                 }
 
-                calendar.set(Calendar.HOUR_OF_DAY, hour)
+                calendar.set(Calendar.HOUR, hour)
                 calendar.set(Calendar.MINUTE, minute)
                 calendar.set(Calendar.AM_PM, period)
 

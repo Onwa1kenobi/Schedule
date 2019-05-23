@@ -1,18 +1,22 @@
 package io.julius.schedule
 
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
-import android.util.Log
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
 import io.julius.schedule.data.ScheduleRepositoryImpl
 import io.julius.schedule.data.cache.AppDatabase
 import io.julius.schedule.data.cache.LocalDataSource
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -24,8 +28,6 @@ class AlarmReceiver : BroadcastReceiver(), CoroutineScope {
     override fun onReceive(context: Context, intent: Intent) {
         // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
 
-        Log.e("SCHEDULE", "Beginning")
-
         val repository =
             ScheduleRepositoryImpl(LocalDataSource(AppDatabase.getInstance(context.applicationContext).appDao()))
 
@@ -34,17 +36,15 @@ class AlarmReceiver : BroadcastReceiver(), CoroutineScope {
 
                 val alarmManager = AlarmManager(context)
 
-                val job = GlobalScope.async {
-                    repository.getSchedules()
-                }
+                launch {
 
-                GlobalScope.launch(Dispatchers.Main) {
-                    val schedules = job.await().value
-                    schedules?.forEach {
-                        if (it.timeInMillis > Calendar.getInstance().timeInMillis) {
-                            // Re-register the alarms
-                            alarmManager.registerAlarm(it)
-                        }
+                    val schedules = async(Dispatchers.IO) {
+                        repository.getActiveSchedules(Calendar.getInstance().timeInMillis)
+                    }.await()
+
+                    schedules.forEach {
+                        // Re-register the alarms
+                        alarmManager.registerAlarm(it)
                     }
                 }
 
@@ -52,55 +52,27 @@ class AlarmReceiver : BroadcastReceiver(), CoroutineScope {
             }
         }
 
-        Log.e("SCHEDULE", "It came here")
         // Alarm received, fetch the schedule and trigger the notification
 
         launch {
-            val data = repository.getSchedule(intent.getIntExtra("id", 1))
+            val schedule = async(Dispatchers.IO) {
+                repository.getSchedule(intent.getIntExtra("id", 1))
+            }.await()
 
-            data.observeForever { schedule ->
-                Log.e("SCHEDULE", "E mella")
-
-                showNotification(
-                    context,
-                    MainActivity::class.java,
-                    "Schedule",
-                    schedule.description,
-                    schedule.id
-                )
-            }
-
-//            val schedule = data.value!!
-
-            Log.e("SCHEDULE", "E balleh")
-
-//            showNotification(
-//                context,
-//                MainActivity::class.java,
-//                "Schedule",
-//                schedule.description,
-//                schedule.id
-//            )
+            showNotification(
+                context,
+                MainActivity::class.java,
+                "Schedule",
+                schedule.description,
+                schedule.id
+            )
         }
-
-//        runBlocking {
-//            val schedule = async(Dispatchers.IO) {
-//                repository.getSchedule(intent.getIntExtra("id", 1))
-//            }.await().value!!
-//
-//            showNotification(
-//                context,
-//                MainActivity::class.java,
-//                "Schedule",
-//                schedule.description,
-//                schedule.id
-//            )
-//        }
     }
 
     private fun showNotification(context: Context, cls: Class<*>, title: String, content: String, requestCode: Int) {
-        Log.e("SCHEDULE", "Show notification called")
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+        val channelId = "schedule_channel_$requestCode"
 
         val notificationIntent = Intent(context, cls)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -112,7 +84,7 @@ class AlarmReceiver : BroadcastReceiver(), CoroutineScope {
         val pendingIntent =
             stackBuilder.getPendingIntent(requestCode, PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val builder = NotificationCompat.Builder(context)
+        val builder = NotificationCompat.Builder(context, channelId)
 
         val notification = builder.setContentTitle(title)
             .setContentText(content)
@@ -123,6 +95,12 @@ class AlarmReceiver : BroadcastReceiver(), CoroutineScope {
             .build()
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelName = context.getString(R.string.app_name)
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val notificationChannel = NotificationChannel(channelId, channelName, importance)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
         notificationManager.notify(requestCode, notification)
     }
 }

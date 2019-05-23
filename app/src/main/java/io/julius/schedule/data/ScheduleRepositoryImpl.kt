@@ -14,11 +14,15 @@ class ScheduleRepositoryImpl(private val localDataSource: LocalDataSource) : Sch
         return localDataSource.getSchedules()
     }
 
+    override suspend fun getActiveSchedules(currentTimeInMillis: Long): List<Schedule> {
+        return localDataSource.getActiveSchedules(currentTimeInMillis)
+    }
+
     override suspend fun getDateSchedules(dayOfMonth: Int, month: Int, year: Int): LiveData<List<Schedule>> {
         return localDataSource.getDateSchedules(dayOfMonth, month, year)
     }
 
-    override suspend fun getSchedule(id: Int): LiveData<Schedule> {
+    override suspend fun getSchedule(id: Int): Schedule {
         return localDataSource.getSchedule(id)
     }
 
