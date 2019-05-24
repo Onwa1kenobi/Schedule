@@ -3,7 +3,6 @@ package io.julius.schedule
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -93,14 +92,20 @@ class AddEditScheduleFragment : Fragment() {
             if (field_schedule_description.text.toString().trim().isEmpty()) {
                 layout_description_field_wrapper.error = "Please enter a description for your schedule"
             } else {
-                val calendar = Calendar.getInstance()
-                calendar.timeInMillis = currentDateInMillis
+                val referenceCalendar = Calendar.getInstance()
+                referenceCalendar.timeInMillis = currentDateInMillis
 
-                var hour: Int
+                val scheduleCalendar = Calendar.getInstance()
+                scheduleCalendar.clear()
+                scheduleCalendar.set(Calendar.DAY_OF_MONTH, referenceCalendar.get(Calendar.DAY_OF_MONTH))
+                scheduleCalendar.set(Calendar.MONTH, referenceCalendar.get(Calendar.MONTH))
+                scheduleCalendar.set(Calendar.YEAR, referenceCalendar.get(Calendar.YEAR))
+
+                val hour: Int
                 val minute: Int
 
                 // Variable to specify period of day.
-                var period = Calendar.AM
+//                val period: Int
 
                 if (Build.VERSION.SDK_INT >= 23) {
                     hour = time_picker.hour
@@ -110,34 +115,32 @@ class AddEditScheduleFragment : Fragment() {
                     minute = time_picker.currentMinute
                 }
 
-                Log.e("SCHEDULE", "HOUR : $hour     MINUTE : $minute")
+//                when {
+//                    hour == 0 -> {
+//                        hour = 12
+//                        period = Calendar.AM
+//                    }
+//
+//                    hour > 12 -> {
+//                        hour -= 12
+//                        period = Calendar.PM
+//                    }
+//
+//                    hour < 12 -> {
+//                        period = Calendar.AM
+//                    }
+//
+//                    else -> {
+//                        hour = 12
+//                        period = Calendar.PM
+//                    }
+//                }
 
-                when {
-                    hour == 0 -> {
-                        hour = 12
-                        period = Calendar.AM
-                    }
+                scheduleCalendar.set(Calendar.HOUR_OF_DAY, hour)
+                scheduleCalendar.set(Calendar.MINUTE, minute)
+//                scheduleCalendar.set(Calendar.AM_PM, period)
 
-                    hour > 12 -> {
-                        hour -= 12
-                        period = Calendar.PM
-                    }
-
-                    hour < 12 -> {
-                        period = Calendar.AM
-                    }
-
-                    else -> {
-                        hour = 12
-                        period = Calendar.PM
-                    }
-                }
-
-                calendar.set(Calendar.HOUR, hour)
-                calendar.set(Calendar.MINUTE, minute)
-                calendar.set(Calendar.AM_PM, period)
-
-                if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) {
+                if (scheduleCalendar.timeInMillis < Calendar.getInstance().timeInMillis) {
                     // Time is in the past, show message
                     Toast.makeText(
                         context!!,
@@ -149,18 +152,25 @@ class AddEditScheduleFragment : Fragment() {
 
                 if (schedule == null) {
                     // New schedule, call viewmodel to add
-                    scheduleViewModel.saveSchedule(field_schedule_description.text.toString().trim(), calendar)
+                    scheduleViewModel.saveSchedule(field_schedule_description.text.toString().trim(), scheduleCalendar)
                 } else {
                     // Existing schedule, call viewmodel to edit
                     scheduleViewModel.updateSchedule(
                         schedule,
                         field_schedule_description.text.toString().trim(),
-                        calendar
+                        scheduleCalendar
                     )
                 }
+
             }
         }
     }
 
+    override fun onStop() {
+        // Clear focus from input field
+        field_schedule_description.clearFocus()
+
+        super.onStop()
+    }
 
 }

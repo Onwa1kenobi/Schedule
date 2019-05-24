@@ -17,7 +17,7 @@ import kotlin.coroutines.CoroutineContext
 
 class ScheduleViewModel(private val repository: ScheduleRepository, context: Context) : ViewModel(), CoroutineScope {
 
-    val alarmManager = AlarmManager(context)
+    private val alarmManager = AlarmManager(context)
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO
 

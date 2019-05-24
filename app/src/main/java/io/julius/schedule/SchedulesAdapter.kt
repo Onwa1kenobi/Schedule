@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.julius.schedule.data.model.Schedule
 import kotlinx.android.synthetic.main.item_schedule_action.view.*
@@ -36,8 +37,9 @@ class SchedulesAdapter : RecyclerView.Adapter<SchedulesAdapter.ViewHolder>() {
 
     fun updateSchedules(items: List<Schedule>) {
         // Update list of schedules
+        val diffResult = DiffUtil.calculateDiff(ScheduleListDiffCallback(schedules, items))
         schedules = items
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -52,13 +54,29 @@ class SchedulesAdapter : RecyclerView.Adapter<SchedulesAdapter.ViewHolder>() {
 
             calendar.timeInMillis = schedule.timeInMillis
 
-            itemView.label_hour.text = String.format("%02d", calendar.get(Calendar.HOUR))
-            itemView.label_minute.text = String.format("%02d", calendar.get(Calendar.MINUTE))
+            when {
+                calendar.get(Calendar.HOUR_OF_DAY) == 0 -> {
+                    itemView.label_hour.text = String.format("%02d", 12)
+                    itemView.label_meridian.text = itemView.context.getString(R.string.period_am)
+                }
 
-            itemView.label_meridian.text = when (calendar.get(Calendar.AM_PM)) {
-                Calendar.AM -> "am"
-                else -> "pm"
+                calendar.get(Calendar.HOUR_OF_DAY) > 12 -> {
+                    itemView.label_hour.text = String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY) - 12)
+                    itemView.label_meridian.text = itemView.context.getString(R.string.period_pm)
+                }
+
+                calendar.get(Calendar.HOUR_OF_DAY) < 12 -> {
+                    itemView.label_hour.text = String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY))
+                    itemView.label_meridian.text = itemView.context.getString(R.string.period_am)
+                }
+
+                else -> {
+                    itemView.label_hour.text = String.format("%02d", 12)
+                    itemView.label_meridian.text = itemView.context.getString(R.string.period_pm)
+                }
             }
+
+            itemView.label_minute.text = String.format("%02d", calendar.get(Calendar.MINUTE))
 
             itemView.label_action.text = schedule.description
 
